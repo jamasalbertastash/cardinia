@@ -4,33 +4,28 @@ require 'mechanize'
 agent = Mechanize.new
 
 def scrape_page(page, comment_url)
-  table = page.at("table")
+  table = page.at("#tbl_results")
 
-  table.search("tr")[1..-1].each do |tr|
-    date_str = tr.search("td")[3].inner_text.gsub(/[[:space:]]/, ' ')
-    
-    # Split the date string on periods
-    day, month, year = date_str.split(".")
-    
-    # Print the date values for debugging
-    puts "Parsed Date: Day: #{day}, Month: #{month}, Year: #{year}"
+  table.search("tbody tr").each do |tr|
+    application_number = tr.search("td")[0].inner_text.strip
+    lodged_date = tr.search("td")[1].inner_text.strip
+    decision_date = tr.search("td")[2].inner_text.strip
+    address = tr.search("td")[3].inner_text.strip
+    reason_for_permit = tr.search("td")[4].inner_text.strip
+    ward = tr.search("td")[5].inner_text.strip
+    status = tr.search("td")[6].inner_text.strip
 
-    # Guard clause
-    unless day && month && year
-      puts "Invalid date values. Skipping..."
-      next
-    end
-
-    # Adjust the year to YYYY format
-    year = "20" + year if year.length == 2
+    # Convert lodged_date to proper format
+    day, month, year = lodged_date.split('-').map(&:to_i)
+    lodged_date_formatted = Date.new(year, month, day).to_s
 
     record = {
-      "info_url" => tr.search("td a")[0].attributes['href'].to_s,
+      "info_url" => nil,  # No detail page URL provided in the given snippet.
       "comment_url" => comment_url,
-      "council_reference" => tr.search("td")[0].inner_text,
-      "description" => tr.search("td")[1].inner_text,
-      "address" => tr.search("td")[2].inner_text + ", VIC",
-      "on_notice_to" => Date.new(year.to_i, month.to_i, day.to_i).to_s,
+      "council_reference" => application_number,
+      "description" => reason_for_permit,
+      "address" => address,
+      "on_notice_to" => lodged_date_formatted,
       "date_scraped" => Date.today.to_s
     }
 
@@ -44,7 +39,7 @@ def scrape_page(page, comment_url)
   end
 end
 
-url = "https://www.cardinia.vic.gov.au/advertisedplanningapplications"
+url = "https://eplanning.cardinia.vic.gov.au/Public/PlanningRegister.aspx?search=basic&reference=T180314"
 comment_url = "mail@cardinia.vic.gov.au"
 page = agent.get(url)
 puts "Scraping page..."
