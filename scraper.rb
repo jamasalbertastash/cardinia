@@ -8,7 +8,17 @@ def scrape_page(page, comment_url)
 
   table.search("tr")[1..-1].each do |tr|
     day, month, year = tr.search("td")[3].inner_text.gsub(/[[:space:]]/, ' ').split(" ")
+    
+    # Print the date values for debugging
+    puts "Parsed Date: Day: #{day}, Month: #{month}, Year: #{year}"
+
     month_i = Date::MONTHNAMES.index(month)
+
+    # Guard clause
+    unless day && month_i && year
+      puts "Invalid date values. Skipping..."
+      next
+    end
 
     record = {
       "info_url" => tr.search("td a")[0].attributes['href'].to_s,
