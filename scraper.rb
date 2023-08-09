@@ -3,12 +3,21 @@ require 'mechanize'
 
 agent = Mechanize.new
 
+url = "https://eplanning.cardinia.vic.gov.au/Public/PlanningRegister.aspx?search=basic&reference=T180314"
+page = agent.get(url)
+
+# Find the "I Agree" button and submit the form
+agree_button = page.at("input#ctl00_PlaceHolder_Body_btnAcceptDisclaimer")
+page = agree_button.click
+
+# Continue with scraping as usual
 def scrape_page(page, comment_url)
-  if table.nil?
-  puts "No table found on the page."
-  return
-end
   table = page.at("#tbl_results")
+
+  if table.nil?
+    puts "No table found on the page."
+    return
+  end
 
   table.search("tbody tr").each do |tr|
     application_number = tr.search("td")[0].inner_text.strip
