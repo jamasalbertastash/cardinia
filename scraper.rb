@@ -4,6 +4,10 @@ require 'mechanize'
 agent = Mechanize.new
 
 def scrape_page(page, comment_url)
+  if table.nil?
+  puts "No table found on the page."
+  return
+end
   table = page.at("#tbl_results")
 
   table.search("tbody tr").each do |tr|
