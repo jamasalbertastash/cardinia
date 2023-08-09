@@ -6,9 +6,10 @@ agent = Mechanize.new
 url = "https://eplanning.cardinia.vic.gov.au/Public/PlanningRegister.aspx?search=basic&reference=T180314"
 page = agent.get(url)
 
-# Find the "I Agree" button and submit the form
-agree_button = page.at("input#ctl00_PlaceHolder_Body_btnAcceptDisclaimer")
-page = agree_button.click
+# Find the form and then the "I Agree" button and submit it
+form = agent.page.form_with(id: "aspnetForm")
+agree_button = form.button_with(id: "ctl00_PlaceHolder_Body_btnAcceptDisclaimer")
+page = agent.submit(form, agree_button)
 
 # Continue with scraping as usual
 def scrape_page(page, comment_url)
