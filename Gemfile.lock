@@ -10,6 +10,8 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
+    watir 
+    webdrivers
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
     http-cookie (1.0.2)
@@ -45,3 +47,5 @@ PLATFORMS
 DEPENDENCIES
   mechanize
   scraperwiki!
+  watir
+  webdrivers
