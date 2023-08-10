@@ -1,17 +1,17 @@
+require 'watir'
 require 'scraperwiki'
-require 'mechanize'
 
-def scrape_page(page, comment_url)
-  table = page.at("#tbl_results")
+def scrape_page(browser, comment_url)
+  table = browser.table(id: 'tbl_results')
 
-  if table.nil?
+  if table.rows.count <= 1
     puts "No table found on the page."
     return
   end
 
-  table.search("tbody tr").each do |tr|
-    application_number = tr.search("td")[0].inner_text.strip
-    lodged_date = tr.search("td")[1].inner_text.strip
+  table.rows(skip: 1).each do |row| # skip the header row
+    application_number = row.cells[0].text.strip
+    lodged_date = row.cells[1].text.strip
     # ... [keeping other fields the same]
     
     # Convert lodged_date to proper format
@@ -32,20 +32,22 @@ def scrape_page(page, comment_url)
   end
 end
 
-agent = Mechanize.new
-
 url = "https://eplanning.cardinia.vic.gov.au/Public/PlanningRegister.aspx?search=basic&reference=T180314"
 comment_url = "mail@cardinia.vic.gov.au"
 
+browser = Watir::Browser.new :chrome, headless: true
+
 # Fetch the initial page
-page = agent.get(url)
+browser.goto(url)
 
 # Find the form and submit the "I Agree" button
-form = agent.page.form_with(id: "aspnetForm")
-agree_button = form.button_with(id: "ctl00_PlaceHolder_Body_btnAcceptDisclaimer")
-page = agent.submit(form, agree_button)
+agree_button = browser.button(id: 'ctl00_PlaceHolder_Body_btnAcceptDisclaimer')
+agree_button.click
 
-# Now that you've agreed, re-fetch the page containing the data
-page = agent.get(url)
+# Wait for table to be loaded
+Watir::Wait.until { browser.table(id: 'tbl_results').exists? }
+
 puts "Scraping page..."
-scrape_page(page, comment_url)
+scrape_page(browser, comment_url)
+
+browser.close
